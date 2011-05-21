@@ -90,8 +90,9 @@ class IntervalBrancher : public Brancher {
 
         // Check status of brancher, return true if alternatives left
         virtual bool status(const Space& home) const {
-            for (int i = 0; i < x.size(); ++i) {
-                if (x[i].size() != (int) (w[i] * p)) {
+            for (int i = start; i < x.size(); ++i) {
+                if (x[i].width() + w[i] > (int) (w[i] * p)) {
+                    start = i;
                     return true;
                 }
             }
@@ -102,6 +103,12 @@ class IntervalBrancher : public Brancher {
         virtual Choice* choice(Space& home) {
             // FILL IN HERE 
             //return new Description(*this, 10, 0);
+            IntVarValues values(x[start]); // need to be able to walk through the values
+            while (values() && x[start].min() + w[start] - values.val() < p*w[start]) {
+                values++;
+            }
+            return new Description(*this, 2, start, values.val());
+
         }
 
         // Perform commit for choice c and alternative a
