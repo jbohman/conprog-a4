@@ -68,6 +68,7 @@ class IntervalBrancher : public Brancher {
         IntervalBrancher(Home home, 
                 ViewArray<IntView>& x0, int w0[], double p0)
             : Brancher(home), x(x0), w(w0), p(p0), start(0) {}
+
         // Post branching
         static void post(Home home, ViewArray<IntView>& x, int w[], double p) {
             (void) new (home) IntervalBrancher(home,x,w,p);
@@ -80,7 +81,8 @@ class IntervalBrancher : public Brancher {
                 w = home.alloc<int>(x.size());
                 for (int i=x.size(); i--; )
                     w[i]=b.w[i];
-            }
+        }
+
         // Copy brancher
         virtual Actor* copy(Space& home, bool share) {
             return new (home) IntervalBrancher(home, share, *this);
@@ -88,15 +90,18 @@ class IntervalBrancher : public Brancher {
 
         // Check status of brancher, return true if alternatives left
         virtual bool status(const Space& home) const {
-
-            // FILL IN HERE
-
+            for (int i = 0; i < x.size(); ++i) {
+                if (x[i].size() != (int) (w[i] * p)) {
+                    return true;
+                }
+            }
+            return false;
         }
+
         // Return choice as description
         virtual Choice* choice(Space& home) {
-
-            // FILL IN HERE
-
+            // FILL IN HERE 
+            //return new Description(*this, 10, 0);
         }
 
         // Perform commit for choice c and alternative a
@@ -114,17 +119,23 @@ class IntervalBrancher : public Brancher {
 // This posts the interval branching
 void interval(Home home, const IntVarArgs& x, const IntArgs& w, double p) {
     // Check whether arguments make sense
-    if (x.size() != w.size())
+    if (x.size() != w.size()) {
         throw ArgumentSizeMismatch("interval");
+    }
+
     // Never post a branching in a failed space
     if (home.failed()) return;
+
     // Create an array of integer views
     ViewArray<IntView> vx(home,x);
+
     // Create an array of integers
     int* wc = static_cast<Space&>(home).alloc<int>(x.size());
-    for (int i=x.size(); i--; )
-        wc[i]=w[i];
+    for (int i = x.size(); i--;) {
+        wc[i] = w[i];
+    }
+
     // Post the brancher
-    IntervalBrancher::post(home,vx,wc,p);
+    IntervalBrancher::post(home, vx, wc, p);
 }
 
