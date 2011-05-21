@@ -51,13 +51,15 @@ class IntervalBrancher : public Brancher {
             public:
                 // Position of view
                 int pos;
-                // You might need more information, please add here
+
+                // The value to split at
+                int split;
 
                 /* Initialize description for brancher b, number of
                  *  alternatives a, position p, and ???.
                  */
-                Description(const Brancher& b, unsigned int a, int p)
-                    : Choice(b,a), pos(p) {}
+                Description(const Brancher& b, unsigned int a, int p, int split)
+                    : Choice(b,a), pos(p), split(split) {}
                 // Report size occupied
                 virtual size_t size(void) const {
                     return sizeof(Description);
@@ -101,8 +103,6 @@ class IntervalBrancher : public Brancher {
 
         // Return choice as description
         virtual Choice* choice(Space& home) {
-            // FILL IN HERE 
-            //return new Description(*this, 10, 0);
             IntVarValues values(x[start]); // need to be able to walk through the values
             while (values() && x[start].min() + w[start] - values.val() < p*w[start]) {
                 values++;
@@ -117,7 +117,15 @@ class IntervalBrancher : public Brancher {
                 unsigned int a) {
             const Description& d = static_cast<const Description&>(c);
 
-            // FILL IN HERE
+           switch (a) {
+               case 0:
+                   x[d.pos].gq(home, d.split);
+                   break;
+               case 1:
+                   x[d.pos].le(home, d.split);
+                   break;
+           }
+           // TODO return ExecStatus
 
         }
 
