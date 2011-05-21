@@ -3,6 +3,8 @@
 #include <gecode/minimodel.hh>
 #include <cstdio>
 
+#include "interval.cpp"
+
 using namespace Gecode;
 
 int N;
@@ -115,6 +117,15 @@ class SquarePacking : public Script {
 
             // Step 5: Branching heuristics
             branch(*this, s, INT_VAL_MIN); // (5a) Branch on s first
+
+            // Interval branch
+            IntArgs nsizes(N);
+            for (int i = 0; i < N; ++i) {
+                nsizes[i] = size(i);
+            }
+            interval(*this, x, nsizes, 0.6);
+            interval(*this, y, nsizes, 0.6);
+
             // (5c) INT_VAR_NONE means going through the array in order, that
             // is from the biggest to the smallest square
             // (5d) INT_VAL_MIN chooses the minimum value, that is placing it

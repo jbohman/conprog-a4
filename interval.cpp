@@ -56,7 +56,7 @@ class IntervalBrancher : public Brancher {
                 int split;
 
                 /* Initialize description for brancher b, number of
-                 *  alternatives a, position p, and ???.
+                 *  alternatives a, position p, and split split.
                  */
                 Description(const Brancher& b, unsigned int a, int p, int split)
                     : Choice(b,a), pos(p), split(split) {}
@@ -93,7 +93,7 @@ class IntervalBrancher : public Brancher {
         // Check status of brancher, return true if alternatives left
         virtual bool status(const Space& home) const {
             for (int i = start; i < x.size(); ++i) {
-                if (x[i].width() + w[i] > (int) (w[i] * p)) {
+                if (x[i].min() - x[i].max() + w[i] < (int) (w[i] * p)) {
                     start = i;
                     return true;
                 }
@@ -103,12 +103,15 @@ class IntervalBrancher : public Brancher {
 
         // Return choice as description
         virtual Choice* choice(Space& home) {
+            int split;
             IntVarValues values(x[start]); // need to be able to walk through the values
-            while (values() && x[start].min() + w[start] - values.val() < p*w[start]) {
-                values++;
+            while (values()) {
+                if (x[start].min() + w[start] - values.val() >= (int) (w[start] * p)) {
+                    split = values.val();
+                }
+                ++values;
             }
-            return new Description(*this, 2, start, values.val());
-
+            return new Description(*this, 2, start, split);
         }
 
         // Perform commit for choice c and alternative a
@@ -116,17 +119,11 @@ class IntervalBrancher : public Brancher {
                 const Choice& c,
                 unsigned int a) {
             const Description& d = static_cast<const Description&>(c);
-
-           switch (a) {
-               case 0:
-                   x[d.pos].gq(home, d.split);
-                   break;
-               case 1:
-                   x[d.pos].le(home, d.split);
-                   break;
-           }
-           // TODO return ExecStatus
-
+            if (a == 0) {
+                return me_failed(x[d.pos].lq(home, d.split)) ? ES_FAILED : ES_OK;
+            } else {
+                return me_failed(x[d.pos].gr(home, d.split)) ? ES_FAILED : ES_OK;
+            }
         }
 
 };
