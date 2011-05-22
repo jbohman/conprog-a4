@@ -25,6 +25,32 @@ class GameOfLife : public Script {
             rel(*this, matrix.row(n-2), IRT_EQ, 0);
             rel(*this, matrix.col(n-2), IRT_EQ, 0);
 
+            for (int i = 2; i < n-2; ++i) {
+                for (int j = 2; j < n-2; ++j) {
+                    BoolVar stillAlive, newLife;
+                    BoolExpr exp = ((matrix(i-1,j-1) + matrix(i,j-1) + matrix(i+1,j-1) 
+                            + matrix(i-1,j)    + matrix(i,j)   + matrix(i+1,j)
+                            + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 2 && matrix(i,j)) || 
+
+                            (matrix(i-1,j-1) + matrix(i,j-1) + matrix(i+1,j-1) 
+                            + matrix(i-1,j)    + matrix(i,j)   + matrix(i+1,j)
+                            + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 3) );
+
+                            exp.rel(*this, ICL_VAL);
+
+                    // rel(*this, matrix(i-1,j-1) + matrix(i,j-1) + matrix(i+1,j-1) 
+                            // + matrix(i-1,j)    + matrix(i,j)   + matrix(i+1,j)
+                            // + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 2 && matrix(i,j), stillAlive);
+// 
+                    // rel(*this, matrix(i-1,j-1) + matrix(i,j-1) + matrix(i+1,j-1) 
+                            // + matrix(i-1,j)    + matrix(i,j)   + matrix(i+1,j)
+                            // + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 3, newLife);
+
+
+                    rel(*this, matrix(i, j), BOT_OR, newLife, stillAlive);
+                }
+            }
+
             // Branch
             branch(*this, cells, INT_VAR_NONE, INT_VAL_MAX);
         }
