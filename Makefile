@@ -2,3 +2,6 @@ options = -g -O2 -lgecodesearch -lgecodeint -lgecodekernel -lgecodesupport -lgec
 
 squarepacking: squarepacking.cpp interval.cpp
 	g++ $(options) squarepacking.cpp -o squarepacking
+
+gameoflife: gameoflife.cpp
+	g++ $(options) gameoflife.cpp -o gameoflife

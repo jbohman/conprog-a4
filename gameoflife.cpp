@@ -7,10 +7,23 @@ using namespace Gecode;
 class GameOfLife : public Script {
     protected:
         BoolVarArray cells;
+        int n;
 
     public:
-        GameOfLife(const SizeOptions& opt) : cells(*this, opt.size() + 4 * opt.size() + 4, 0, 1) {
+        GameOfLife(const SizeOptions& opt) : cells(*this, (opt.size() + 4) * (opt.size() + 4), 0, 1) {
+            // Setup
+            n = opt.size() + 4;
+            Matrix<BoolVarArgs> matrix(cells, n, n);
+
             // Constraints
+            rel(*this, matrix.row(0), IRT_EQ, 0);
+            rel(*this, matrix.col(0), IRT_EQ, 0);
+            rel(*this, matrix.row(1), IRT_EQ, 0);
+            rel(*this, matrix.col(1), IRT_EQ, 0);
+            rel(*this, matrix.row(n-1), IRT_EQ, 0);
+            rel(*this, matrix.col(n-1), IRT_EQ, 0);
+            rel(*this, matrix.row(n-2), IRT_EQ, 0);
+            rel(*this, matrix.col(n-2), IRT_EQ, 0);
 
             // Branch
             branch(*this, cells, INT_VAR_NONE, INT_VAL_MAX);
@@ -26,9 +39,9 @@ class GameOfLife : public Script {
 
         virtual void print(std::ostream& os) const {
             os << "Game of Life cells" << std::endl;
-            Matrix<BoolVarArgs> matrix(cells, opt.size() + 4, opt.size() + 4);
-            for (int i = 2; i < opt.size() + 2; ++i) {
-                for (int j = 2; j < opt.size() + 2; ++j) {
+            Matrix<BoolVarArgs> matrix(cells, n, n);
+            for (int i = 2; i < n - 2; ++i) {
+                for (int j = 2; j < n - 2; ++j) {
                     if (matrix(i, j).assigned()) {
                         if (matrix(i, j).val() == 1) {
                             os << "X";
