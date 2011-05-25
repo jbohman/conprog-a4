@@ -27,7 +27,7 @@ class GameOfLife : public Script {
 
             for (int i = 2; i < n-2; ++i) {
                 for (int j = 2; j < n-2; ++j) {
-                    BoolVar stillAlive, newLife;
+                    // BoolVar stillAlive, newLife;
                     BoolExpr exp = ((matrix(i-1,j-1) + matrix(i,j-1) + matrix(i+1,j-1) 
                             + matrix(i-1,j)    + matrix(i,j)   + matrix(i+1,j)
                             + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 2 && matrix(i,j)) || 
@@ -47,7 +47,7 @@ class GameOfLife : public Script {
                             // + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 3, newLife);
 
 
-                    rel(*this, matrix(i, j), BOT_OR, newLife, stillAlive);
+                    // rel(*this, matrix(i, j), BOT_OR, newLife, stillAlive);
                 }
             }
 
