@@ -26,28 +26,23 @@ class GameOfLife : public Script {
             rel(*this, matrix.col(n-2), IRT_EQ, 0);
 
             for (int i = 2; i < n-2; ++i) {
+                rel(*this, matrix(2,i) + matrix(2,i+1) + matrix(2,i+2) < 3);
+                rel(*this, matrix(i,2) + matrix(i+1,2) + matrix(i+2,2) < 3);
+                rel(*this, matrix(n-3,i) + matrix(n-3,i+1) + matrix(n-3,i+2) < 3);
+                rel(*this, matrix(i,n-3) + matrix(i+1,n-3) + matrix(i+2,n-3) < 3);
+            }
+
+            for (int i = 2; i < n-2; ++i) {
                 for (int j = 2; j < n-2; ++j) {
-                    // BoolVar stillAlive, newLife;
-                    BoolExpr exp = ((matrix(i-1,j-1) + matrix(i,j-1) + matrix(i+1,j-1) 
-                            + matrix(i-1,j)    + matrix(i,j)   + matrix(i+1,j)
-                            + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 2 && matrix(i,j)) || 
-
-                            (matrix(i-1,j-1) + matrix(i,j-1) + matrix(i+1,j-1) 
-                            + matrix(i-1,j)    + matrix(i,j)   + matrix(i+1,j)
-                            + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 3) );
-
-                            exp.rel(*this, ICL_VAL);
-
-                    // rel(*this, matrix(i-1,j-1) + matrix(i,j-1) + matrix(i+1,j-1) 
-                            // + matrix(i-1,j)    + matrix(i,j)   + matrix(i+1,j)
-                            // + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 2 && matrix(i,j), stillAlive);
-// 
-                    // rel(*this, matrix(i-1,j-1) + matrix(i,j-1) + matrix(i+1,j-1) 
-                            // + matrix(i-1,j)    + matrix(i,j)   + matrix(i+1,j)
-                            // + matrix(i-1,j+1)  + matrix(i,j+1) + matrix(i+1,j+ 1) == 3, newLife);
-
-
-                    // rel(*this, matrix(i, j), BOT_OR, newLife, stillAlive);
+                    IntVar c(*this, 0, n);
+                    BoolVarArgs neighbors;
+                    neighbors << matrix(i-1,j-1) << matrix(i-1,j)
+                          << matrix(i-1,j+1) << matrix(i,j-1)
+                          << matrix(i,j+1) << matrix(i+1,j-1)
+                          << matrix(i+1,j) << matrix(i+1,j+1);
+                    rel(*this, sum(neighbors) == c);
+                    rel(*this, matrix(i,j) >> (c == 2 || c == 3));
+                    rel(*this, !matrix(i,j) >> (c != 3));
                 }
             }
 
@@ -59,32 +54,42 @@ class GameOfLife : public Script {
             cells.update(*this, share, sp.cells);
         }
 
+        virtual void constrain(const Space& b) {
+            const GameOfLife& gol = static_cast<const GameOfLife&>(b);
+            rel(*this, sum(cells) > sum(gol.cells));
+        }
+
         virtual Space* copy(bool share) {
             return new GameOfLife(share, *this);
         }
 
         virtual void print(std::ostream& os) const {
             os << "Game of Life cells" << std::endl;
+            int n = sqrt(cells.size());
+            int alive = 0;
             Matrix<BoolVarArgs> matrix(cells, n, n);
-            for (int i = 2; i < n - 2; ++i) {
-                for (int j = 2; j < n - 2; ++j) {
+            for (int i = 0; i < n - 0; ++i) {
+                for (int j = 0; j < n - 0; ++j) {
                     if (matrix(i, j).assigned()) {
                         if (matrix(i, j).val() == 1) {
                             os << "X";
+                            alive++;
                         } else {
-                            os << " ";
+                            os << ".";
                         }
                     }
                 }
                 os << std::endl;
             }
+            os << "Alive " << alive << std::endl;
         }
 };
 
 int main(int argc, char* argv[]) {
     SizeOptions opt("GameOfLife");
+    opt.solutions(0);
     opt.size(5);
     opt.parse(argc,argv);
-    Script::run<GameOfLife, DFS, SizeOptions>(opt);
+    Script::run<GameOfLife, BAB, SizeOptions>(opt);
     return 0;
 }
