@@ -25,15 +25,8 @@ class GameOfLife : public Script {
             rel(*this, matrix.row(n-2), IRT_EQ, 0);
             rel(*this, matrix.col(n-2), IRT_EQ, 0);
 
-            for (int i = 2; i < n-2; ++i) {
-                rel(*this, matrix(2,i) + matrix(2,i+1) + matrix(2,i+2) < 3);
-                rel(*this, matrix(i,2) + matrix(i+1,2) + matrix(i+2,2) < 3);
-                rel(*this, matrix(n-3,i) + matrix(n-3,i+1) + matrix(n-3,i+2) < 3);
-                rel(*this, matrix(i,n-3) + matrix(i+1,n-3) + matrix(i+2,n-3) < 3);
-            }
-
-            for (int i = 2; i < n-2; ++i) {
-                for (int j = 2; j < n-2; ++j) {
+            for (int i = 1; i < n-1; ++i) {
+                for (int j = 1; j < n-1; ++j) {
                     IntVar c(*this, 0, n);
                     BoolVarArgs neighbors;
                     neighbors << matrix(i-1,j-1) << matrix(i-1,j)
@@ -68,8 +61,8 @@ class GameOfLife : public Script {
             int n = sqrt(cells.size());
             int alive = 0;
             Matrix<BoolVarArgs> matrix(cells, n, n);
-            for (int i = 0; i < n - 0; ++i) {
-                for (int j = 0; j < n - 0; ++j) {
+            for (int i = 2; i < n - 2; ++i) {
+                for (int j = 2; j < n - 2; ++j) {
                     if (matrix(i, j).assigned()) {
                         if (matrix(i, j).val() == 1) {
                             os << "X";
