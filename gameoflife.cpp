@@ -17,7 +17,7 @@ class GameOfLife : public Script {
             int n = opt.size() + 4;
             Matrix<BoolVarArgs> matrix(cells, n, n);
 
-            // Constraints
+            // Constraints, 2 cells wide border
             rel(*this, matrix.row(0), IRT_EQ, 0);
             rel(*this, matrix.col(0), IRT_EQ, 0);
             rel(*this, matrix.row(1), IRT_EQ, 0);
@@ -28,6 +28,7 @@ class GameOfLife : public Script {
             rel(*this, matrix.col(n-2), IRT_EQ, 0);
 
             int k = 0;
+            // Game Of Life constraints
             for (int i = 1; i < n-1; ++i) {
                 for (int j = 1; j < n-1; ++j) {
                     IntVar c(*this, 0, n);
@@ -36,9 +37,13 @@ class GameOfLife : public Script {
                             << matrix(i-1,j+1) << matrix(i,j-1)
                             << matrix(i,j+1) << matrix(i+1,j-1)
                             << matrix(i+1,j) << matrix(i+1,j+1);
+                    // Count neighbors to this cell
                     rel(*this, sum(neighbors) == c);
+                    // Make sure this cell is live when it is supposed to be
                     rel(*this, matrix(i,j) >> (c == 2 || c == 3));
                     rel(*this, !matrix(i,j) >> (c != 3));
+                    
+                    // Every 3x3 square, calculate sum of that minisquare
                     if (i % 3 == 2 && j % 3 == 2 && i < n-2 && j < n-2) {
                         rel(*this, minicells[k] == (matrix(i,j) + matrix(i,j+1) + matrix(i,j+2) +
                                 matrix(i+1,j) + matrix(i+1,j+1) + matrix(i+1,j+2) +
