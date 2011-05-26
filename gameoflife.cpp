@@ -7,12 +7,14 @@ using namespace Gecode;
 class GameOfLife : public Script {
     protected:
         BoolVarArray cells;
-        int n;
+        IntVarArray minicells;
 
     public:
-        GameOfLife(const SizeOptions& opt) : cells(*this, (opt.size() + 4) * (opt.size() + 4), 0, 1) {
+        GameOfLife(const SizeOptions& opt) : 
+                cells(*this, (opt.size() + 4) * (opt.size() + 4), 0, 1),
+                minicells(*this,pow(ceil(opt.size()/3.0),2),0,6) {
             // Setup
-            n = opt.size() + 4;
+            int n = opt.size() + 4;
             Matrix<BoolVarArgs> matrix(cells, n, n);
 
             // Constraints
@@ -25,17 +27,24 @@ class GameOfLife : public Script {
             rel(*this, matrix.row(n-2), IRT_EQ, 0);
             rel(*this, matrix.col(n-2), IRT_EQ, 0);
 
+            int k = 0;
             for (int i = 1; i < n-1; ++i) {
                 for (int j = 1; j < n-1; ++j) {
                     IntVar c(*this, 0, n);
                     BoolVarArgs neighbors;
                     neighbors << matrix(i-1,j-1) << matrix(i-1,j)
-                          << matrix(i-1,j+1) << matrix(i,j-1)
-                          << matrix(i,j+1) << matrix(i+1,j-1)
-                          << matrix(i+1,j) << matrix(i+1,j+1);
+                            << matrix(i-1,j+1) << matrix(i,j-1)
+                            << matrix(i,j+1) << matrix(i+1,j-1)
+                            << matrix(i+1,j) << matrix(i+1,j+1);
                     rel(*this, sum(neighbors) == c);
                     rel(*this, matrix(i,j) >> (c == 2 || c == 3));
                     rel(*this, !matrix(i,j) >> (c != 3));
+                    if (i % 3 == 2 && j % 3 == 2 && i < n-2 && j < n-2) {
+                        rel(*this, minicells[k] == (matrix(i,j) + matrix(i,j+1) + matrix(i,j+2) +
+                                matrix(i+1,j) + matrix(i+1,j+1) + matrix(i+1,j+2) +
+                                matrix(i+2,j) + matrix(i+2,j+1) + matrix(i+2,j+2)));
+                        k++;
+                    }
                 }
             }
 
@@ -45,11 +54,13 @@ class GameOfLife : public Script {
 
         GameOfLife(bool share, GameOfLife& sp) : Script(share, sp) {
             cells.update(*this, share, sp.cells);
+            minicells.update(*this, share, sp.minicells);
         }
 
         virtual void constrain(const Space& b) {
             const GameOfLife& gol = static_cast<const GameOfLife&>(b);
             rel(*this, sum(cells) > sum(gol.cells));
+            rel(*this, sum(minicells) > sum(gol.minicells));
         }
 
         virtual Space* copy(bool share) {
